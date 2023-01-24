@@ -1,0 +1,29 @@
+{
+  "name": "zoomclone",
+  "version": "1.0.0",
+  "description": " Zoom Clone using WebRTC and webSockets",
+  "scripts": {
+    "dev": "nodemon"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/euiyang/ZoomClone.git"
+  },
+  "bugs": {
+    "url": "https://github.com/euiyang/ZoomClone/issues"
+  },
+  "homepage": "https://github.com/euiyang/ZoomClone#readme",
+  "devDependencies": {
+    "@babel/cli": "^7.20.7",
+    "@babel/core": "^7.20.12",
+    "@babel/node": "^7.20.7",
+    "@babel/preset-env": "^7.20.2",
+    "nodemon": "^2.0.20"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "pug": "^3.0.2",
+    "ws": "^8.12.0"
+  }
+}
