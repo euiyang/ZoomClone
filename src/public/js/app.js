@@ -1,54 +1,17 @@
+const socket=io();
 
-const messageList=document.querySelector("ul");
-const messageForm=document.querySelector("#message");
-const nickForm=document.querySelector("#nick");
-const socket=new WebSocket(`ws://${window.location.host}`);
-//window.location.host는 사용자가 어디에 있는지에 대한 정보를 가져온다.
+const welcome=document.getElementById("welcome");
+const form = welcome.querySelector("form");
 
-function makeMessage(type,payload){
-    const msg={type,payload};
-    return JSON.stringify(msg);
-}
-
-socket.addEventListener("open",()=>{
-    console.log("Connected to Server");
-})
-
-socket.addEventListener("message",(message)=>{
-    console.log("Just got this:",message.data,"from the server");
-    //message를 출력하면 해당 message에 대한 다양한 정보를 모두 출력
-});
-
-socket.addEventListener("message",(message)=>{
-    const li =document.createElement("li");
-    li.innerText=message.data;
-    messageList.append(li);
-})
-
-socket.addEventListener("close",()=>{
-    console.log("Disconnected from Server");
-});
-
-// setTimeout(()=>{
-//     socket.send("hello from the browser");
-// },5000);
-
-function handleSubmit(event){
+function handleRoomSubmit(event){
     event.preventDefault();
-    const input= messageForm.querySelector("input");
-    socket.send(makeMessage("new_message",input.value));
+    const input=form.querySelector("input");
+    socket.emit("enter_room", {payload:input.value},()=>{
+        console.log("server is done");
+    });
+    //이전 websocket과 달리 어떠한 이벤트든 반응 가능하고 string으로 보낼 필요 없음
+    //emit 함수의 3번째 인자로 들어가는 callback은 서버 측에서 실행되는 함수를 의미함
     input.value="";
 }
 
-function handleNickSubmit(event){
-    event.preventDefault();
-    const input=nickForm.querySelector("input");
-    socket.send(makeMessage("nickname",input.value));
-    input.value="";
-}
-
-//Json.stringify: json을 string 화, Json.parse: string을 json으로
-
-messageForm.addEventListener("submit",handleSubmit);
-nickForm.addEventListener("submit",handleNickSubmit);
-
+form.addEventListener("submit",handleRoomSubmit);
