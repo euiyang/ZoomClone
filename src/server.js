@@ -2,6 +2,8 @@ import http from "http";
 import SocketIo from "socket.io"
 // import WebSocket from "ws";
 import express, { application } from "express"
+import { WebSocketServer } from "ws";
+import { doesNotMatch } from "assert";
 
 const app=express();
 app.set("view engine","pug");
@@ -15,61 +17,21 @@ app.get("/",(req,res)=>res.render("home"));
 app.get("/*",(_,res)=>res.redirect("/"));
 
 
-const httpServer=http.createServer(app);
-const wsServer=SocketIo(httpServer);
-
-function countRoom(roomName){
-    return wsServer.sockets.adapter.rooms.get(roomName)?.size;
-}
-
-function publicRooms(){
-    // const sids=wsServer.sockets.adapter.sids;
-    // const rooms=wsServer.sockets.adapter.rooms;
-    const{
-        sockets:{
-            adapter:{sids,rooms},
-        },
-    }=wsServer;
-
-    const publicRooms=[];
-    rooms.forEach((_,key)=>{
-        if(sids.get(key)===undefined){
-            publicRooms.push(key);
-        }
-    });
-    return publicRooms;
-}
-
-wsServer.on("connection",(socket)=>{
-
-    socket["nickname"]="Ano";
-
-    socket.onAny((event)=>{
-            console.log(`Socket Event:${event}`);
-        })
-    socket.on("enter_room",(roomName,done)=>{
+WebSocketServer.on("connection",(socket)=>{
+    socket.on("join_room",roomName=>{
         socket.join(roomName);
-        done();
-        socket.to(roomName).emit("welcome",socket.nickname,countRoom(roomName));
-        wsServer.sockets.emit("room_change",publicRooms());
+        socket.to(roomName).emit("welcome");
     });
-    //done은 프론트에서 실행되는 callback 함수
-    //backend에서는 frontend에서 오는 함수를 실행시키면 안됨(보안 이슈)
-    //따라서 backend가 frontend에 있는 함수를 frontend에서 실행하도록 함
-
-    socket.on("disconnecting",()=>{
-        socket.rooms.forEach((room)=>socket.to(room).emit("bye",socket.nickname,countRoom(room)-1));
+    socket.on("offer",(offer,roomName)=>{
+        socket.to(roomName).emit("offer",offer);
+    });
+    socket.emit("answer",(answer,roomName)=>{
+        socket.to(roomName).emit("answer",answer);
     });
 
-    socket.on("disconnect",()=>{
-        wsServer.emit("room_change",publicRooms());
+    socket.on("ice",(ice,roomName)=>{
+        socket.to(roomName).emit("ice",ice);
     });
-
-    socket.on("new_message",(msg,room,done)=>{
-        socket.to(room).emit("new_message",`${socket.nickname}: ${msg}`);
-        done();
-    });
-    socket.on("nickname",(nickname)=>(socket["nickname"]=nickname));
 });
 
 
