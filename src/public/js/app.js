@@ -64,7 +64,7 @@ async function getMedia(deviceId){
     }catch(e){
         console.log(e);
     }
-}
+}//
 
 
 function handleMuteClick(){
@@ -124,26 +124,34 @@ async function handleWelcomeSubmit(event){
 
 welcomeForm.addEventListener("submit",handleWelcomeSubmit);
 
+//socket code
+
 socket.on("welcome", async()=>{
     // console.log("someone joined");
     const offer=await myPeerConnection.createOffer();
+    //offer가 생성되기 전에 넘어가는 것을 방지하기 위해 sync/await 사용
     myPeerConnection.setLocalDescription(offer);
+    //브라우저에 A: local des 생성
     console.log("sent the offer");
     socket.emit("offer",offer,roomName);
+    //offer 서버에 전송
 }); //A: offer 생성
 
 socket.on("offer",async (offer)=>{
     console.log("receive the offer");
     myPeerConnection.setRemoteDescription(offer);
+    // B->A: remote description 생성
     const answer=await myPeerConnection.createAnswer();
     myPeerConnection.setLocalDescription(answer);
+    //answer 생성 및 B local des 설정
     socket.emit("answer",answer,roomName);
     console.log("sent the answer");
 })//B: offer 받음, answer 전달
 
 socket.on("answer",answer=>{
     console.log("receive the answer");
-    myPeerConnection.setLocalDescription(answer);
+    myPeerConnection.setRemoteDescription(answer);
+    //B로 부터 온 answer로 A->B의 remote des 설정
 });
 
 socket.on("ice",(ice)=>{
@@ -167,17 +175,17 @@ function makeConnection(){
             },
         ],
     });
-    myPeerConnection.addEventListener("icecandidate",handleIce);
+    myPeerConnection.addEventListener("icecandidate", handleIce);
 
     myPeerConnection.addEventListener("addStream",handleAddStream);
     myStream
         .getTracks()
         .forEach(track=> myPeerConnection.addTrack(track,myStream));
-    //addStream 대신 addTracks 함수로 영상의 stream 데이터를 넣음.
-
+    //addStream 대신 addTracks 함수로 myPeerConnection에 영상의 stream 데이터를 넣음.
+    //getTracks를 하면 오디오와 비디오 정보를 각각 넣을 수 있음.
 }
 
-function hancleIce(data){
+function handleIce(data){
     console.log("sent candidate");
     socket.emit("ice",data.candidate,roomName);
 }

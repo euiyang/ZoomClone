@@ -1,9 +1,6 @@
 import http from "http";
 import SocketIo from "socket.io"
-// import WebSocket from "ws";
 import express, { application } from "express"
-import { WebSocketServer } from "ws";
-import { doesNotMatch } from "assert";
 
 const app=express();
 app.set("view engine","pug");
@@ -15,6 +12,9 @@ app.use("/public",express.static(__dirname+"/public"));
 app.get("/",(req,res)=>res.render("home"));
 //home.pug를 render 해주는 route handler를 만듦
 app.get("/*",(_,res)=>res.redirect("/"));
+
+const httpServer=http.createServer(app);
+const wsServer=SocketIo(httpServer);
 
 
 WebSocketServer.on("connection",(socket)=>{
@@ -33,6 +33,8 @@ WebSocketServer.on("connection",(socket)=>{
         socket.to(roomName).emit("ice",ice);
     });
 });
+//socket.to는 기본적으로 자신을 제외한 나머지에게 전송을 전제로 함.
+//각자 전송하는 것을 전달하는 역할을 하는 서버
 
 
 
